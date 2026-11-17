@@ -40,36 +40,37 @@ THEME_PRESETS: dict[str, dict[str, Any]] = {
         "applicant": ("Fajar Nugroho", "fajar.n@mail.id", "081355667788", "Procurement IT, Vendor SLA, Cloud FinOps", "INTERVIEW"),
     },
     "manufaktur": {
-        "company_name": "PT ABC",
-        "industry_label": "Industri Manufaktur & Perakitan Komponen",
+        "company_name": "PT Panata Jaya Mandiri",
+        "industry_label": "Manufaktur Komponen Otomotif & OEM",
         "description": (
-            "PT ABC adalah perusahaan manufaktur komponen presisi dan perakitan mesin industri dengan fokus "
-            "shift kerja pabrik, lembur lini produksi, sertifikasi K3, gudang bahan baku (SCM), dan distributor (CRM)."
+            "PT Panata Jaya Mandiri adalah perusahaan manufaktur komponen otomotif OEM dengan fokus "
+            "pengelolaan upah buruh pabrik per cost center, shift & lembur lini produksi, sertifikasi K3, "
+            "gudang bahan baku & penerimaan barang 3-way match (SCM/Keuangan), serta akun pelanggan OEM (CRM)."
         ),
         "departments": [
             ("HRD", "Human Resources & K3", "CC-100", "Manajemen SDM pabrik, shift kerja, sertifikasi K3, dan payroll."),
-            ("PRD", "Produksi & Perakitan", "CC-200", "Lini produksi CNC, perakitan komponen, dan quality control."),
-            ("SCM", "Warehouse, Logistik & Procurement", "CC-300", "Gudang bahan baku, pengadaan material, dan distribusi barang jadi."),
-            ("SLS", "B2B Sales & Distributor (CRM)", "CC-400", "Penjualan produk manufaktur ke distributor dan klien industri."),
-            ("FIN", "Finance & Cost Accounting", "CC-500", "Akuntansi biaya produksi, anggaran, dan pembayaran gaji."),
+            ("PRD", "Produksi Komponen Otomotif", "CC-200", "Lini produksi stamping/CNC otomotif, pencatatan upah buruh pabrik per cost center, dan quality control."),
+            ("SCM", "Warehouse, Logistik & Procurement", "CC-300", "Gudang bahan baku otomotif, Goods Receipt (GR) PO 3-way match, dan pengiriman OEM."),
+            ("SLS", "B2B Sales & OEM Account (CRM)", "CC-400", "Penjualan komponen otomotif ke customer OEM dan distributor (termin & komisi)."),
+            ("FIN", "Finance, Treasury & Cost Accounting", "CC-500", "Three-way match AP (PO/GR/Invoice), aging piutang OEM, dan pembayaran gaji per cost center."),
         ],
         "employees": [
-            ("EMP-001", "Hendra Gunawan", "hendra.gunawan@ptabc.co.id", "081240002001", "HRD", "HR & Industrial Relations Manager", "TETAP", "INTERNAL", "AKTIF", "2022-04-01", 11500000, 2000000, 70000, "BCA", "5310011221", "Pengelola hubungan industrial & payroll pabrik"),
-            ("EMP-002", "Budi Santoso", "budi.santoso@ptabc.co.id", "081240002002", "PRD", "Supervisor Lini Produksi A", "TETAP", "SCM_OPS", "AKTIF", "2022-08-12", 9500000, 1800000, 65000, "BRI", "0038122331", "Pengawas target output & shift operator mesin"),
-            ("EMP-003", "Slamet Riyadi", "slamet.riyadi@ptabc.co.id", "081240002003", "PRD", "Operator Mesin CNC Senior", "TETAP", "SCM_OPS", "AKTIF", "2023-03-01", 6800000, 1200000, 50000, "BRI", "0038199442", "Operator mesin presisi + tunjangan shift & K3"),
-            ("EMP-004", "Agus Setiawan", "agus.setiawan@ptabc.co.id", "081240002004", "SCM", "Kepala Gudang Bahan Baku", "TETAP", "SCM_OPS", "AKTIF", "2023-01-20", 8200000, 1500000, 55000, "Mandiri", "1410088123", "Penanggung jawab stok gudang & receiving SCM"),
-            ("EMP-005", "Rina Marlina", "rina.marlina@ptabc.co.id", "081240002005", "SLS", "Industrial B2B Sales Lead", "TETAP", "CRM_SALES", "AKTIF", "2023-07-01", 8800000, 1500000, 55000, "BCA", "5310044112", "Penjualan kontrak ke distributor nasional (komisi CRM)"),
-            ("EMP-006", "Doni Saputra", "doni.saputra@ptabc.co.id", "081240002006", "SLS", "Regional Account Executive", "KONTRAK", "CRM_SALES", "AKTIF", "2024-05-10", 7200000, 1200000, 48000, "BNI", "0441234561", "Akuisisi pabrik mitra area Jawa Timur (komisi CRM)"),
-            ("EMP-007", "Taufik Hidayat", "taufik.h@ptabc.co.id", "081240002007", "PRD", "Quality Control & K3 Inspector", "TETAP", "INTERNAL", "AKTIF", "2024-02-01", 7500000, 1300000, 52000, "BCA", "5310099812", "Inspeksi standar mutu ISO 9001 & K3"),
-            ("EMP-008", "Maya Sari", "maya.sari@ptabc.co.id", "081240002008", "FIN", "Payroll & Cost Staff", "TETAP", "FINANCE", "AKTIF", "2023-10-15", 8000000, 1200000, 50000, "Mandiri", "1410055612", "Rekonsiliasi upah lembur produksi & pajak"),
+            ("EMP-001", "Hendra Gunawan", "hendra.gunawan@panatajayamandiri.co.id", "081240002001", "HRD", "HR & Industrial Relations Manager", "TETAP", "INTERNAL", "AKTIF", "2022-04-01", 11500000, 2000000, 70000, "BCA", "5310011221", "Pengelola hubungan industrial, K3, & payroll pabrik"),
+            ("EMP-002", "Budi Santoso", "budi.santoso@panatajayamandiri.co.id", "081240002002", "PRD", "Supervisor Lini Produksi Otomotif", "TETAP", "SCM_OPS", "AKTIF", "2022-08-12", 9500000, 1800000, 65000, "BRI", "0038122331", "Pengawas target output OEM & shift operator mesin (CC-200)"),
+            ("EMP-003", "Slamet Riyadi", "slamet.riyadi@panatajayamandiri.co.id", "081240002003", "PRD", "Operator Mesin Stamping & CNC Senior", "TETAP", "SCM_OPS", "AKTIF", "2023-03-01", 6800000, 1200000, 50000, "BRI", "0038199442", "Buruh pabrik lini otomotif + tunjangan shift & K3 (CC-200)"),
+            ("EMP-004", "Agus Setiawan", "agus.setiawan@panatajayamandiri.co.id", "081240002004", "SCM", "Kepala Gudang Bahan Baku & Receiving", "TETAP", "SCM_OPS", "AKTIF", "2023-01-20", 8200000, 1500000, 55000, "Mandiri", "1410088123", "Penanggung jawab stok gudang & Goods Receipt (GR) SCM (CC-300)"),
+            ("EMP-005", "Rina Marlina", "rina.marlina@panatajayamandiri.co.id", "081240002005", "SLS", "OEM Key Account Sales Lead", "TETAP", "CRM_SALES", "AKTIF", "2023-07-01", 8800000, 1500000, 55000, "BCA", "5310044112", "Penjualan kontrak komponen ke customer OEM (komisi CRM)"),
+            ("EMP-006", "Doni Saputra", "doni.saputra@panatajayamandiri.co.id", "081240002006", "SLS", "OEM & Distributor Account Executive", "KONTRAK", "CRM_SALES", "AKTIF", "2024-05-10", 7200000, 1200000, 48000, "BNI", "0441234561", "Akuisisi distributor & pemantauan termin OEM area Jawa (komisi CRM)"),
+            ("EMP-007", "Taufik Hidayat", "taufik.h@panatajayamandiri.co.id", "081240002007", "PRD", "Quality Control (IATF/ISO) & K3 Inspector", "TETAP", "INTERNAL", "AKTIF", "2024-02-01", 7500000, 1300000, 52000, "BCA", "5310099812", "Inspeksi standar mutu komponen otomotif & K3"),
+            ("EMP-008", "Maya Sari", "maya.sari@panatajayamandiri.co.id", "081240002008", "FIN", "Payroll & Cost Center Accounting Staff", "TETAP", "FINANCE", "AKTIF", "2023-10-15", 8000000, 1200000, 50000, "Mandiri", "1410055612", "Rekonsiliasi upah buruh per cost center & dukungan 3-way match Keuangan"),
         ],
         "certifications": [
-            ("EMP-003", "Sertifikasi Operator CNC & Keselamatan Mesin", "BNSP Kemnaker", "2025-01-20", "2028-01-20", "VALID"),
+            ("EMP-003", "Sertifikasi Operator CNC/Stamping & Keselamatan Mesin", "BNSP Kemnaker", "2025-01-20", "2028-01-20", "VALID"),
             ("EMP-007", "Ahli K3 Umum Sertifikasi Kemnaker", "Kemnaker RI", "2024-09-10", "2027-09-10", "VALID"),
             ("EMP-004", "Certified Warehouse & Forklift Safety", "Kemnaker RI", "2025-04-05", "2028-04-05", "VALID"),
         ],
-        "manpower": ("MR-2026-001", "SCM", "SCM", "Operator Gudang & Logistik Shift Malam", 2, 6500000, "Lonjakan pengiriman bahan baku & barang jadi lini B"),
-        "applicant": ("Wahyu Prasetyo", "wahyu.p@mail.id", "081377889900", "Manajemen Gudang, Forklift SIO, Stock Opname", "INTERVIEW"),
+        "manpower": ("MR-2026-001", "SCM", "SCM", "Operator Gudang & Receiving Material Otomotif", 2, 6500000, "Lonjakan batch komponen otomotif OEM & proses Goods Receipt gudang"),
+        "applicant": ("Wahyu Prasetyo", "wahyu.p@mail.id", "081377889900", "Manajemen Gudang, Forklift SIO, Goods Receipt & Stock Opname", "INTERVIEW"),
     },
     "telekomunikasi": {
         "company_name": "PT Cakrawala Telekomunikasi Nusantara",

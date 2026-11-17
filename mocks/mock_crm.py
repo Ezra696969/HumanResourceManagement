@@ -16,10 +16,10 @@ app, auth_dep = create_mock_app(
     expected_client_secret="rahasia-hrm-ke-crm",
 )
 
-# Data kasar komisi sales per periode (EMP-005 & EMP-006 adalah CRM_SALES pada tema Manufaktur)
+# Data kasar komisi sales per periode (EMP-005 & EMP-006 adalah CRM_SALES PT Panata Jaya Mandiri)
 SALES_COMMISSIONS: list[dict[str, Any]] = [
-    {"periode": "2026-11", "kode_karyawan": "EMP-005", "nama": "Industrial B2B Sales Lead", "jumlah_deal": 4, "total_komisi": 3200000},
-    {"periode": "2026-11", "kode_karyawan": "EMP-006", "nama": "Regional Account Executive", "jumlah_deal": 2, "total_komisi": 1750000},
+    {"periode": "2026-11", "kode_karyawan": "EMP-005", "nama": "OEM Key Account Sales Lead", "jumlah_deal": 4, "total_komisi": 3200000},
+    {"periode": "2026-11", "kode_karyawan": "EMP-006", "nama": "OEM & Distributor Account Executive", "jumlah_deal": 2, "total_komisi": 1750000},
 ]
 LAST_HRM_SYNC: dict[str, Any] = {"ok": None, "items": [], "message": "Belum tarik data dari HRM"}
 

@@ -78,7 +78,7 @@ def test_theme_switching_preserves_custom_partner_url(hrm_client: TestClient):
 
     # Switch ke manufaktur dan telekomunikasi
     for theme, expected_name in (
-        ("manufaktur", "PT ABC"),
+        ("manufaktur", "PT Panata Jaya Mandiri"),
         ("telekomunikasi", "PT Cakrawala Telekomunikasi Nusantara"),
     ):
         sw = hrm_client.post("/api/v1/system/switch-theme", json={"theme_key": theme, "preserve_partners": True})
@@ -268,6 +268,9 @@ def test_cloud_unified_single_port_gateway(tmp_path, monkeypatch):
     server = _start_uvicorn_bg(cloud_app, port)
     try:
         base = f"http://127.0.0.1:{port}"
+        health = requests.get(f"{base}/health", timeout=5)
+        assert health.status_code == 200
+        assert health.json()["company_name"] == "PT Panata Jaya Mandiri"
         assert requests.get(f"{base}/", timeout=5).status_code == 200
         assert requests.get(f"{base}/mock/keuangan/", timeout=5).status_code == 200
         assert requests.get(f"{base}/mock/crm/", timeout=5).status_code == 200

@@ -23,8 +23,8 @@ def _base_context(request: Request, active_page: str, page_title: str) -> dict:
         "page_title": page_title,
         "company": dict(prof) if prof else {
             "theme_key": "manufaktur",
-            "company_name": "PT ABC",
-            "industry_label": "Industri Manufaktur & Perakitan Komponen",
+            "company_name": "PT Panata Jaya Mandiri",
+            "industry_label": "Manufaktur Komponen Otomotif & OEM",
         },
         "default_period": DEFAULT_PERIOD,
     }

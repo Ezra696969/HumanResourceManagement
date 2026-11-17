@@ -16,10 +16,10 @@ app, auth_dep = create_mock_app(
     expected_client_secret="rahasia-hrm-ke-scm",
 )
 
-# EMP-003 & EMP-004 adalah SCM_OPS pada tema Manufaktur (Operator CNC & Kepala Gudang)
+# EMP-003 & EMP-004 adalah SCM_OPS PT Panata Jaya Mandiri (Operator Stamping/CNC & Kepala Gudang)
 SCM_OVERTIME: list[dict[str, Any]] = [
-    {"periode": "2026-11", "kode_karyawan": "EMP-003", "total_jam_lembur": 6.0, "catatan": "Lembur shift produksi mesin CNC"},
-    {"periode": "2026-11", "kode_karyawan": "EMP-004", "total_jam_lembur": 4.0, "catatan": "Stock opname & pengiriman bahan baku"},
+    {"periode": "2026-11", "kode_karyawan": "EMP-003", "total_jam_lembur": 6.0, "catatan": "Lembur shift produksi komponen otomotif"},
+    {"periode": "2026-11", "kode_karyawan": "EMP-004", "total_jam_lembur": 4.0, "catatan": "Stock opname & Goods Receipt bahan baku PO/GR"},
 ]
 LAST_SCM_MSG: dict[str, Any] = {"staff": [], "status_msg": "Belum ada panggilan ke HRM"}
 
