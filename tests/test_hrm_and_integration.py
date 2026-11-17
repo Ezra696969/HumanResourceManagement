@@ -78,7 +78,7 @@ def test_theme_switching_preserves_custom_partner_url(hrm_client: TestClient):
 
     # Switch ke manufaktur dan telekomunikasi
     for theme, expected_name in (
-        ("manufaktur", "PT Prima Karya Manufaktur"),
+        ("manufaktur", "PT ABC"),
         ("telekomunikasi", "PT Cakrawala Telekomunikasi Nusantara"),
     ):
         sw = hrm_client.post("/api/v1/system/switch-theme", json={"theme_key": theme, "preserve_partners": True})

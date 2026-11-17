@@ -22,9 +22,9 @@ def _base_context(request: Request, active_page: str, page_title: str) -> dict:
         "active_page": active_page,
         "page_title": page_title,
         "company": dict(prof) if prof else {
-            "theme_key": "software",
-            "company_name": "PT Nusantara Digital Solusi",
-            "industry_label": "Software & Layanan Teknologi Informasi",
+            "theme_key": "manufaktur",
+            "company_name": "PT ABC",
+            "industry_label": "Industri Manufaktur & Perakitan Komponen",
         },
         "default_period": DEFAULT_PERIOD,
     }
