@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+    <div class="flex flex-wrap items-center gap-2.5">
+      <input id="emp-search" oninput="loadEmployees()" type="text" placeholder="Cari nama / kode / jabatan..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm w-60 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <select id="emp-filter-role" onchange="loadEmployees()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm">
+        <option value="">Semua Role Integrasi</option>
+        <option value="INTERNAL">INTERNAL</option>
+        <option value="CRM_SALES">CRM_SALES (Dipakai Kel. 7)</option>
+        <option value="SCM_OPS">SCM_OPS (Dipakai Kel. 8)</option>
+        <option value="FINANCE">FINANCE</option>
+      </select>
+      <select id="emp-filter-status" onchange="loadEmployees()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm">
+        <option value="">Semua Status</option>
+        <option value="AKTIF" selected>AKTIF</option>
+        <option value="CUTI">CUTI</option>
+        <option value="NONAKTIF">NONAKTIF</option>
+      </select>
+    </div>
+    <button onclick="openEmployeeModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold">
+      + Tambah Karyawan
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="w-full text-sm text-left">
+      <thead class="text-xs uppercase text-slate-500 border-b border-slate-200 bg-slate-50">
+        <tr>
+          <th class="p-3">Kode</th>
+          <th class="p-3">Nama & Email</th>
+          <th class="p-3">Departemen & Jabatan</th>
+          <th class="p-3">Role Integrasi</th>
+          <th class="p-3 text-right">Gaji Pokok + Tunjangan</th>
+          <th class="p-3">Status</th>
+          <th class="p-3 text-right">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="employees-body" class="divide-y divide-slate-100"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Tambah/Edit Karyawan -->
+<div id="employee-modal" class="hidden fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+      <h3 class="font-bold text-lg" id="emp-modal-title">Tambah Karyawan</h3>
+      <button onclick="closeModal('employee-modal')" class="text-slate-400 hover:text-slate-700 text-xl">&times;</button>
+    </div>
+    <form id="employee-form" onsubmit="saveEmployee(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+      <input type="hidden" id="emp-id" />
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Kode Karyawan (opsional, auto jika kosong)</label>
+        <input id="emp-code" type="text" placeholder="EMP-009" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap *</label>
+        <input id="emp-name" required type="text" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Email Korporat *</label>
+        <input id="emp-email" required type="email" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">No. HP</label>
+        <input id="emp-phone" type="text" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Departemen *</label>
+        <select id="emp-dept" required class="w-full border border-slate-300 rounded-lg px-3 py-2"></select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Jabatan *</label>
+        <input id="emp-pos" required type="text" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Tipe Kontrak</label>
+        <select id="emp-type" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+          <option value="TETAP">TETAP</option>
+          <option value="KONTRAK">KONTRAK</option>
+          <option value="MAGANG">MAGANG</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Role Integrasi Lintas Kelompok</label>
+        <select id="emp-role" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+          <option value="INTERNAL">INTERNAL</option>
+          <option value="CRM_SALES">CRM_SALES (Tersedia untuk CRM Kel. 7)</option>
+          <option value="SCM_OPS">SCM_OPS (Tersedia untuk SCM Kel. 8)</option>
+          <option value="FINANCE">FINANCE</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Gaji Pokok (Rp) *</label>
+        <input id="emp-salary" required type="number" min="0" value="8000000" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Tunjangan Tetap (Rp)</label>
+        <input id="emp-allowance" type="number" min="0" value="1200000" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Tarif Lembur / Jam (Rp)</label>
+        <input id="emp-ot-rate" type="number" min="0" value="55000" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Bank & No. Rekening</label>
+        <div class="flex gap-2">
+          <input id="emp-bank" type="text" value="BCA" class="w-24 border border-slate-300 rounded-lg px-2 py-2" />
+          <input id="emp-acc" type="text" placeholder="52100..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+      </div>
+      <div class="sm:col-span-2 flex justify-end gap-2 pt-3 border-t border-slate-200">
+        <button type="button" onclick="closeModal('employee-modal')" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700">Batal</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold">Simpan Karyawan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Sertifikasi Karyawan -->
+<div id="cert-modal" class="hidden fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-xl w-full p-6 shadow-xl">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+      <h3 class="font-bold text-lg" id="cert-modal-title">Sertifikasi & Skill</h3>
+      <button onclick="closeModal('cert-modal')" class="text-slate-400 hover:text-slate-700 text-xl">&times;</button>
+    </div>
+    <div id="cert-list" class="space-y-2 mb-4 max-h-52 overflow-y-auto text-sm"></div>
+    <form onsubmit="saveCertification(event)" class="grid grid-cols-2 gap-3 text-sm pt-3 border-t border-slate-200">
+      <input type="hidden" id="cert-emp-id" />
+      <input id="cert-name" required placeholder="Nama Sertifikasi / Skill" class="col-span-2 border border-slate-300 rounded-lg px-3 py-2" />
+      <input id="cert-issuer" required placeholder="Penerbit (mis. AWS / Kemnaker)" class="border border-slate-300 rounded-lg px-3 py-2" />
+      <input id="cert-issued" required type="date" value="2026-01-15" class="border border-slate-300 rounded-lg px-3 py-2" />
+      <button type="submit" class="col-span-2 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold">+ Tambah Sertifikasi</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let DEPARTMENTS = [];
+let EMPLOYEES = [];
+
+async function initEmployeesPage() {
+  DEPARTMENTS = await apiFetch("/api/v1/departments");
+  const deptSel = document.getElementById("emp-dept");
+  deptSel.innerHTML = DEPARTMENTS.map(d => `<option value="${d.id}">${esc(d.code)} — ${esc(d.name)}</option>`).join("");
+  await loadEmployees();
+}
+
+async function loadEmployees() {
+  const q = new URLSearchParams();
+  const s = document.getElementById("emp-search").value.trim();
+  const r = document.getElementById("emp-filter-role").value;
+  const st = document.getElementById("emp-filter-status").value;
+  if (s) q.set("search", s);
+  if (r) q.set("integration_role", r);
+  if (st) q.set("status", st);
+
+  EMPLOYEES = await apiFetch("/api/v1/employees?" + q.toString());
+  const body = document.getElementById("employees-body");
+  if (!EMPLOYEES.length) {
+    body.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Tidak ada data karyawan sesuai filter.</td></tr>`;
+    return;
+  }
+  body.innerHTML = EMPLOYEES.map(e => `
+    <tr class="hover:bg-slate-50">
+      <td class="p-3 font-mono font-semibold text-slate-700">${esc(e.employee_code)}</td>
+      <td class="p-3">
+        <div class="font-semibold text-slate-900">${esc(e.full_name)}</div>
+        <div class="text-xs text-slate-500">${esc(e.email)}</div>
+      </td>
+      <td class="p-3">
+        <div class="font-medium text-slate-800">${esc(e.position_title)}</div>
+        <div class="text-xs text-slate-500">${esc(e.department_name)} · ${esc(e.employment_type)}</div>
+      </td>
+      <td class="p-3">${statusBadge(e.integration_role)}</td>
+      <td class="p-3 text-right">
+        <div class="font-semibold">${formatRupiah(e.base_salary)}</div>
+        <div class="text-xs text-slate-500">+ ${formatRupiah(e.fixed_allowance)}</div>
+      </td>
+      <td class="p-3">${statusBadge(e.status)}</td>
+      <td class="p-3 text-right whitespace-nowrap space-x-1">
+        <button onclick="openCertModal(${e.id}, '${esc(e.full_name)}')" class="px-2.5 py-1 text-xs rounded border border-slate-300 hover:bg-slate-100">Sertifikasi</button>
+        <button onclick="openEmployeeModal(${e.id})" class="px-2.5 py-1 text-xs rounded border border-blue-300 text-blue-700 hover:bg-blue-50">Edit</button>
+        ${e.status !== 'NONAKTIF' ? `<button onclick="deactivateEmp(${e.id}, '${esc(e.full_name)}')" class="px-2.5 py-1 text-xs rounded border border-rose-300 text-rose-700 hover:bg-rose-50">Nonaktifkan</button>` : ''}
+      </td>
+    </tr>
+  `).join("");
+}
+
+function openEmployeeModal(empId = null) {
+  const form = document.getElementById("employee-form");
+  form.reset();
+  document.getElementById("emp-id").value = empId || "";
+  document.getElementById("emp-code").disabled = Boolean(empId);
+  document.getElementById("emp-modal-title").textContent = empId ? "Edit Data Karyawan" : "Tambah Karyawan Baru";
+
+  if (empId) {
+    const e = EMPLOYEES.find(x => x.id === empId);
+    if (e) {
+      document.getElementById("emp-code").value = e.employee_code;
+      document.getElementById("emp-name").value = e.full_name;
+      document.getElementById("emp-email").value = e.email;
+      document.getElementById("emp-phone").value = e.phone;
+      document.getElementById("emp-dept").value = e.department_id;
+      document.getElementById("emp-pos").value = e.position_title;
+      document.getElementById("emp-type").value = e.employment_type;
+      document.getElementById("emp-role").value = e.integration_role;
+      document.getElementById("emp-salary").value = e.base_salary;
+      document.getElementById("emp-allowance").value = e.fixed_allowance;
+      document.getElementById("emp-ot-rate").value = e.overtime_rate;
+      document.getElementById("emp-bank").value = e.bank_name;
+      document.getElementById("emp-acc").value = e.bank_account;
+    }
+  }
+  openModal("employee-modal");
+}
+
+async function saveEmployee(ev) {
+  ev.preventDefault();
+  const id = document.getElementById("emp-id").value;
+  const payload = {
+    full_name: document.getElementById("emp-name").value.trim(),
+    email: document.getElementById("emp-email").value.trim(),
+    phone: document.getElementById("emp-phone").value.trim(),
+    department_id: Number(document.getElementById("emp-dept").value),
+    position_title: document.getElementById("emp-pos").value.trim(),
+    employment_type: document.getElementById("emp-type").value,
+    integration_role: document.getElementById("emp-role").value,
+    base_salary: Number(document.getElementById("emp-salary").value),
+    fixed_allowance: Number(document.getElementById("emp-allowance").value),
+    overtime_rate: Number(document.getElementById("emp-ot-rate").value),
+    bank_name: document.getElementById("emp-bank").value.trim(),
+    bank_account: document.getElementById("emp-acc").value.trim(),
+  };
+  if (!id) {
+    const code = document.getElementById("emp-code").value.trim();
+    if (code) payload.employee_code = code;
+  }
+
+  try {
+    if (id) {
+      await apiFetch(`/api/v1/employees/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+      showToast("Data karyawan diperbarui");
+    } else {
+      await apiFetch("/api/v1/employees", { method: "POST", body: JSON.stringify(payload) });
+      showToast("Karyawan baru berhasil ditambahkan");
+    }
+    closeModal("employee-modal");
+    await loadEmployees();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function deactivateEmp(id, name) {
+  if (!confirm(`Ubah status "${name}" menjadi NONAKTIF?`)) return;
+  try {
+    await apiFetch(`/api/v1/employees/${id}`, { method: "DELETE" });
+    showToast(`${name} dinonaktifkan`);
+    await loadEmployees();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function openCertModal(empId, fullName) {
+  document.getElementById("cert-emp-id").value = empId;
+  document.getElementById("cert-modal-title").textContent = `Sertifikasi: ${fullName}`;
+  await refreshCertList(empId);
+  openModal("cert-modal");
+}
+
+async function refreshCertList(empId) {
+  const certs = await apiFetch(`/api/v1/employees/${empId}/certifications`);
+  const box = document.getElementById("cert-list");
+  if (!certs.length) {
+    box.innerHTML = `<div class="text-slate-400 text-center py-3">Belum ada data sertifikasi.</div>`;
+    return;
+  }
+  box.innerHTML = certs.map(c => `
+    <div class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 bg-slate-50">
+      <div>
+        <div class="font-semibold text-slate-800">${esc(c.cert_name)}</div>
+        <div class="text-xs text-slate-500">${esc(c.issuer)} · Terbit ${esc(c.issued_date)}</div>
+      </div>
+      <button onclick="deleteCert(${c.id}, ${empId})" class="text-xs text-rose-600 hover:underline">Hapus</button>
+    </div>
+  `).join("");
+}
+
+async function saveCertification(ev) {
+  ev.preventDefault();
+  const empId = Number(document.getElementById("cert-emp-id").value);
+  try {
+    await apiFetch("/api/v1/certifications", {
+      method: "POST",
+      body: JSON.stringify({
+        employee_id: empId,
+        cert_name: document.getElementById("cert-name").value.trim(),
+        issuer: document.getElementById("cert-issuer").value.trim(),
+        issued_date: document.getElementById("cert-issued").value,
+      }),
+    });
+    document.getElementById("cert-name").value = "";
+    document.getElementById("cert-issuer").value = "";
+    showToast("Sertifikasi ditambahkan");
+    await refreshCertList(empId);
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function deleteCert(certId, empId) {
+  await apiFetch(`/api/v1/certifications/${certId}`, { method: "DELETE" });
+  await refreshCertList(empId);
+}
+
+initEmployeesPage();
+</script>
+{% endblock %}

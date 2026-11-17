@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Panel Kiri: Catat Absensi / Sync SCM -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+    <div>
+      <h3 class="font-bold text-slate-900">Catat Kehadiran & Lembur</h3>
+      <p class="text-xs text-slate-500">Data lembur otomatis dihitung pada modul Payroll</p>
+    </div>
+    <form onsubmit="submitAttendance(event)" class="space-y-3 text-sm">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Karyawan</label>
+        <select id="att-emp" required class="w-full border border-slate-300 rounded-lg px-3 py-2"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal</label>
+          <input id="att-date" type="date" value="2026-11-17" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
+          <select id="att-status" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+            <option value="HADIR">HADIR</option>
+            <option value="TERLAMBAT">TERLAMBAT</option>
+            <option value="IZIN">IZIN</option>
+            <option value="SAKIT">SAKIT</option>
+            <option value="ALPHA">ALPHA (Potong Gaji)</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Jam Reguler</label>
+          <input id="att-reg" type="number" step="0.5" min="0" value="8" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Jam Lembur</label>
+          <input id="att-ot" type="number" step="0.5" min="0" value="0" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan</label>
+        <input id="att-note" type="text" placeholder="Opsional..." class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+        Simpan Absensi
+      </button>
+    </form>
+
+    <div class="pt-4 border-t border-slate-200">
+      <div class="text-xs font-semibold text-slate-700 mb-1">Integrasi Kelompok 8 (SCM)</div>
+      <p class="text-xs text-slate-500 mb-2">Tarik catatan lembur shift gudang/lapangan langsung dari server SCM.</p>
+      <button onclick="syncScmOvertime()" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold">
+        🔄 Tarik Lembur dari SCM ({{ default_period }})
+      </button>
+    </div>
+  </div>
+
+  <!-- Panel Kanan: Daftar Log Absensi & Pengajuan Cuti -->
+  <div class="lg:col-span-2 space-y-6">
+    <!-- Pengajuan Cuti -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="font-bold text-slate-900">Pengajuan & Persetujuan Cuti</h3>
+          <p class="text-xs text-slate-500">Kuota cuti tahunan otomatis berkurang saat disetujui</p>
+        </div>
+        <button onclick="openModal('leave-modal')" class="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-semibold">+ Ajukan Cuti</button>
+      </div>
+      <div class="table-wrap">
+        <table class="w-full text-sm text-left">
+          <thead class="text-xs uppercase text-slate-500 border-b border-slate-200">
+            <tr>
+              <th class="py-2">Karyawan</th>
+              <th class="py-2">Jenis & Tanggal</th>
+              <th class="py-2">Alasan</th>
+              <th class="py-2">Status</th>
+              <th class="py-2 text-right">Keputusan</th>
+            </tr>
+          </thead>
+          <tbody id="leaves-body" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Log Kehadiran -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-slate-900">Rekap Kehadiran & Lembur ({{ default_period }})</h3>
+        <span class="text-xs text-slate-500">Sumber <span class="badge badge-blue">SCM_SYNC</span> berasal dari Kelompok 8</span>
+      </div>
+      <div class="table-wrap max-h-96 overflow-y-auto">
+        <table class="w-full text-xs text-left">
+          <thead class="uppercase text-slate-500 border-b border-slate-200 sticky top-0 bg-white">
+            <tr>
+              <th class="py-2">Tanggal</th>
+              <th class="py-2">Karyawan</th>
+              <th class="py-2">Status</th>
+              <th class="py-2 text-right">Reguler</th>
+              <th class="py-2 text-right">Lembur</th>
+              <th class="py-2">Sumber</th>
+              <th class="py-2">Catatan</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-body" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ajukan Cuti -->
+<div id="leave-modal" class="hidden fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+      <h3 class="font-bold text-lg">Pengajuan Cuti Karyawan</h3>
+      <button onclick="closeModal('leave-modal')" class="text-slate-400 hover:text-slate-700 text-xl">&times;</button>
+    </div>
+    <form onsubmit="submitLeave(event)" class="space-y-3 text-sm">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Karyawan</label>
+        <select id="lv-emp" required class="w-full border border-slate-300 rounded-lg px-3 py-2"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Cuti</label>
+          <select id="lv-type" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+            <option value="TAHUNAN">TAHUNAN</option>
+            <option value="SAKIT">SAKIT</option>
+            <option value="KHUSUS">KHUSUS</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Hari</label>
+          <input id="lv-days" type="number" min="1" value="1" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Mulai</label>
+          <input id="lv-start" type="date" value="2026-11-23" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Selesai</label>
+          <input id="lv-end" type="date" value="2026-11-23" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Alasan</label>
+        <input id="lv-reason" required placeholder="Alasan cuti..." class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('leave-modal')" class="px-4 py-2 border border-slate-300 rounded-lg">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">Kirim Pengajuan</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const PERIOD = "{{ default_period }}";
+
+async function initAttendance() {
+  const emps = await apiFetch("/api/v1/employees?status=AKTIF");
+  const opts = emps.map(e => `<option value="${e.id}">${esc(e.employee_code)} — ${esc(e.full_name)}</option>`).join("");
+  document.getElementById("att-emp").innerHTML = opts;
+  document.getElementById("lv-emp").innerHTML = opts;
+  await Promise.all([loadLeaves(), loadAttendance()]);
+}
+
+async function loadLeaves() {
+  const rows = await apiFetch("/api/v1/leaves");
+  document.getElementById("leaves-body").innerHTML = rows.map(l => `
+    <tr>
+      <td class="py-2.5">
+        <div class="font-semibold text-slate-900">${esc(l.full_name)}</div>
+        <div class="text-xs text-slate-500">Sisa kuota: ${l.leave_quota} hari</div>
+      </td>
+      <td class="py-2.5">
+        <div class="font-medium">${esc(l.leave_type)} (${l.days_count} hr)</div>
+        <div class="text-xs text-slate-500">${esc(l.start_date)} s/d ${esc(l.end_date)}</div>
+      </td>
+      <td class="py-2.5 text-slate-600">${esc(l.reason)}</td>
+      <td class="py-2.5">${statusBadge(l.status)}</td>
+      <td class="py-2.5 text-right whitespace-nowrap">
+        ${l.status === 'PENDING' ? `
+          <button onclick="decideLeave(${l.id}, 'APPROVED')" class="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700">Setujui</button>
+          <button onclick="decideLeave(${l.id}, 'REJECTED')" class="px-2 py-1 text-xs bg-rose-600 text-white rounded hover:bg-rose-700">Tolak</button>
+        ` : `<span class="text-xs text-slate-400">${esc(l.reviewed_by)}</span>`}
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function loadAttendance() {
+  const rows = await apiFetch(`/api/v1/attendance?period=${PERIOD}`);
+  document.getElementById("attendance-body").innerHTML = rows.map(a => `
+    <tr>
+      <td class="py-2 font-mono text-slate-600">${esc(a.work_date)}</td>
+      <td class="py-2 font-medium text-slate-900">${esc(a.employee_code)} · ${esc(a.full_name)}</td>
+      <td class="py-2">${statusBadge(a.status)}</td>
+      <td class="py-2 text-right">${a.regular_hours} jam</td>
+      <td class="py-2 text-right font-semibold ${a.overtime_hours > 0 ? 'text-blue-700' : ''}">${a.overtime_hours} jam</td>
+      <td class="py-2">${a.source === 'SCM_SYNC' ? '<span class="badge badge-blue">SCM_SYNC</span>' : '<span class="badge badge-slate">INTERNAL</span>'}</td>
+      <td class="py-2 text-slate-600">${esc(a.note)}</td>
+    </tr>
+  `).join("");
+}
+
+async function submitAttendance(ev) {
+  ev.preventDefault();
+  try {
+    await apiFetch("/api/v1/attendance", {
+      method: "POST",
+      body: JSON.stringify({
+        employee_id: Number(document.getElementById("att-emp").value),
+        work_date: document.getElementById("att-date").value,
+        status: document.getElementById("att-status").value,
+        regular_hours: Number(document.getElementById("att-reg").value),
+        overtime_hours: Number(document.getElementById("att-ot").value),
+        note: document.getElementById("att-note").value.trim(),
+      }),
+    });
+    showToast("Absensi disimpan");
+    await loadAttendance();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function syncScmOvertime() {
+  try {
+    showToast("Menarik data lembur dari SCM (Kelompok 8)...", "info");
+    const res = await apiFetch(`/api/v1/attendance/sync-scm?period=${PERIOD}`, { method: "POST" });
+    showToast(`Berhasil sinkronisasi ${res.synced_count} data lembur dari SCM`);
+    await loadAttendance();
+  } catch (err) {
+    showToast("Gagal terhubung ke SCM: " + err.message, "error");
+  }
+}
+
+async function submitLeave(ev) {
+  ev.preventDefault();
+  try {
+    await apiFetch("/api/v1/leaves", {
+      method: "POST",
+      body: JSON.stringify({
+        employee_id: Number(document.getElementById("lv-emp").value),
+        leave_type: document.getElementById("lv-type").value,
+        days_count: Number(document.getElementById("lv-days").value),
+        start_date: document.getElementById("lv-start").value,
+        end_date: document.getElementById("lv-end").value,
+        reason: document.getElementById("lv-reason").value.trim(),
+      }),
+    });
+    closeModal("leave-modal");
+    showToast("Pengajuan cuti dikirim");
+    await loadLeaves();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function decideLeave(id, decision) {
+  try {
+    await apiFetch(`/api/v1/leaves/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: decision, reviewed_by: "HR Manager" }),
+    });
+    showToast(`Pengajuan cuti di-${decision}`);
+    await loadLeaves();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+initAttendance();
+</script>
+{% endblock %}

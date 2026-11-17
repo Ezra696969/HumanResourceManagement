@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-xl p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <div class="text-xs uppercase tracking-wider text-blue-300 font-semibold">Profil Perusahaan Aktif</div>
+    <h2 class="text-xl font-bold mt-0.5" id="dash-company-name">{{ company.company_name }}</h2>
+    <p class="text-sm text-slate-300 mt-1 max-w-3xl" id="dash-company-desc">{{ company.description }}</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button onclick="checkAllHealth()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-semibold transition">
+      🔄 Cek Koneksi Kel. 2, 7, 8
+    </button>
+    <a href="/payroll" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-semibold transition">
+      💳 Proses Payroll ({{ default_period }})
+    </a>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <div class="text-xs font-medium text-slate-500">Total Karyawan Aktif</div>
+    <div class="text-2xl font-bold text-slate-900 mt-1" id="kpi-active">-</div>
+    <div class="text-xs text-slate-500 mt-1" id="kpi-roles">CRM: - · SCM: -</div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <div class="text-xs font-medium text-slate-500">Pengajuan Cuti Pending</div>
+    <div class="text-2xl font-bold text-amber-600 mt-1" id="kpi-leaves">-</div>
+    <div class="text-xs text-slate-500 mt-1"><a href="/attendance" class="text-blue-600 hover:underline">Tinjau di Absensi & Cuti →</a></div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <div class="text-xs font-medium text-slate-500">Lowongan / Manpower Open</div>
+    <div class="text-2xl font-bold text-blue-600 mt-1" id="kpi-manpower">-</div>
+    <div class="text-xs text-slate-500 mt-1"><a href="/recruitment" class="text-blue-600 hover:underline">Kelola Rekrutmen →</a></div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <div class="text-xs font-medium text-slate-500">Payroll Periode {{ default_period }}</div>
+    <div class="text-xl font-bold text-emerald-700 mt-1" id="kpi-payroll-net">Belum dibuat</div>
+    <div class="text-xs text-slate-500 mt-1" id="kpi-payroll-status">Status: -</div>
+  </div>
+</div>
+
+<!-- Integration Status + Department Breakdown -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="font-bold text-slate-900">Status Koneksi Ekosistem (Kel. 2, 7, 8)</h3>
+        <p class="text-xs text-slate-500">Endpoint dapat diubah kapan saja di menu Integration Hub</p>
+      </div>
+      <a href="/integration" class="text-xs font-semibold text-blue-600 hover:underline">Atur Endpoint →</a>
+    </div>
+    <div class="space-y-3" id="partners-health-list">
+      <div class="text-sm text-slate-400">Memuat status mitra...</div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+    <h3 class="font-bold text-slate-900 mb-1">Komposisi Departemen & Beban Gaji Tetap</h3>
+    <p class="text-xs text-slate-500 mb-4">Ringkasan SDM aktif per unit organisasi</p>
+    <div class="table-wrap">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs uppercase text-slate-500 border-b border-slate-200">
+          <tr>
+            <th class="py-2">Kode</th>
+            <th class="py-2">Departemen</th>
+            <th class="py-2 text-right">Karyawan</th>
+            <th class="py-2 text-right">Gaji Tetap/Bln</th>
+          </tr>
+        </thead>
+        <tbody id="dept-breakdown-body" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Integration Logs -->
+<div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+  <div class="flex items-center justify-between mb-3">
+    <div>
+      <h3 class="font-bold text-slate-900">Jejak Pertukaran Data Terbaru (API Integration Logs)</h3>
+      <p class="text-xs text-slate-500">Log otomatis setiap request masuk (INBOUND) dan keluar (OUTBOUND)</p>
+    </div>
+    <a href="/integration" class="text-xs font-semibold text-blue-600 hover:underline">Lihat Semua Log →</a>
+  </div>
+  <div class="table-wrap">
+    <table class="w-full text-xs text-left">
+      <thead class="uppercase text-slate-500 border-b border-slate-200">
+        <tr>
+          <th class="py-2 pr-3">Waktu</th>
+          <th class="py-2 pr-3">Arah</th>
+          <th class="py-2 pr-3">Mitra</th>
+          <th class="py-2 pr-3">Endpoint</th>
+          <th class="py-2 pr-3">Status</th>
+          <th class="py-2">Ringkasan</th>
+        </tr>
+      </thead>
+      <tbody id="recent-logs-body" class="divide-y divide-slate-100"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadDashboard() {
+  try {
+    const data = await apiFetch("/api/v1/dashboard");
+    document.getElementById("kpi-active").textContent = `${data.kpis.active_employees} / ${data.kpis.total_employees}`;
+    document.getElementById("kpi-roles").textContent = `CRM Sales: ${data.kpis.crm_sales_staff} · SCM Ops: ${data.kpis.scm_ops_staff}`;
+    document.getElementById("kpi-leaves").textContent = data.kpis.pending_leaves;
+    document.getElementById("kpi-manpower").textContent = data.kpis.open_manpower_requests;
+
+    const pr = data.kpis.latest_payroll;
+    if (pr) {
+      document.getElementById("kpi-payroll-net").textContent = formatRupiah(pr.total_net);
+      document.getElementById("kpi-payroll-status").innerHTML = `Status: ${statusBadge(pr.status)} (${pr.total_employees} pegawai)`;
+    }
+
+    const pList = document.getElementById("partners-health-list");
+    pList.innerHTML = data.partners.map(p => `
+      <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50">
+        <div>
+          <div class="text-sm font-semibold text-slate-900">${esc(p.group_label)} — ${esc(p.partner_name)}</div>
+          <div class="text-xs text-slate-500 font-mono">${esc(p.base_url)} · Auth: ${esc(p.auth_type)}</div>
+        </div>
+        <div class="text-right">
+          ${statusBadge(p.last_health_status)}
+          <div class="text-[11px] text-slate-400 mt-1">${esc(p.last_checked_at || "Belum dicek")}</div>
+        </div>
+      </div>
+    `).join("");
+
+    const deptBody = document.getElementById("dept-breakdown-body");
+    deptBody.innerHTML = data.department_breakdown.map(d => `
+      <tr>
+        <td class="py-2.5 font-mono text-xs font-semibold text-slate-600">${esc(d.code)}</td>
+        <td class="py-2.5 font-medium text-slate-900">${esc(d.name)}</td>
+        <td class="py-2.5 text-right">${esc(d.total_employees)}</td>
+        <td class="py-2.5 text-right font-medium">${formatRupiah(d.monthly_fixed_cost)}</td>
+      </tr>
+    `).join("");
+
+    const logBody = document.getElementById("recent-logs-body");
+    if (!data.recent_logs.length) {
+      logBody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-400">Belum ada aktivitas integrasi. Klik "Cek Koneksi Kel. 2, 7, 8" untuk uji ping.</td></tr>`;
+    } else {
+      logBody.innerHTML = data.recent_logs.map(l => `
+        <tr>
+          <td class="py-2 pr-3 whitespace-nowrap text-slate-500">${esc(l.timestamp)}</td>
+          <td class="py-2 pr-3">${statusBadge(l.direction === 'INBOUND' ? 'CRM_SALES' : 'SCM_OPS').replace(l.direction === 'INBOUND' ? 'CRM_SALES' : 'SCM_OPS', l.direction)}</td>
+          <td class="py-2 pr-3 font-semibold">${esc(l.partner_key)}</td>
+          <td class="py-2 pr-3 font-mono">${esc(l.method)} ${esc(l.url_or_path)}</td>
+          <td class="py-2 pr-3">${l.success ? `<span class="badge badge-green">${l.status_code}</span>` : `<span class="badge badge-red">${l.status_code}</span>`}</td>
+          <td class="py-2 text-slate-600 truncate max-w-xs">${esc(l.response_summary)}</td>
+        </tr>
+      `).join("");
+    }
+  } catch (err) {
+    showToast("Gagal memuat dashboard: " + err.message, "error");
+  }
+}
+
+async function checkAllHealth() {
+  try {
+    showToast("Mengecek koneksi ke Keuangan, CRM, dan SCM...", "info");
+    const results = await apiFetch("/api/v1/integration/partners/health-all", { method: "POST" });
+    const onlineCount = results.filter(r => r.status === "ONLINE").length;
+    showToast(`Hasil pengecekan: ${onlineCount} dari ${results.length} mitra ONLINE`, onlineCount > 0 ? "success" : "error");
+    await loadDashboard();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+loadDashboard();
+</script>
+{% endblock %}

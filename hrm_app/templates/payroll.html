@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="no-print bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+  <div class="flex flex-wrap items-center gap-3">
+    <label class="text-sm font-semibold text-slate-700">
+      Periode Gaji:
+      <input id="pay-period" type="month" value="{{ default_period }}" onchange="loadPayroll()" class="ml-2 border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-normal" />
+    </label>
+    <label class="text-xs text-slate-600 flex items-center gap-1.5 bg-slate-100 px-3 py-2 rounded-lg">
+      <input id="pay-sync-ext" type="checkbox" checked class="rounded" />
+      <span>Tarik Komisi CRM (Kel. 7) & Lembur SCM (Kel. 8)</span>
+    </label>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button onclick="generatePayrollBatch()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold">
+      ⚙️ Hitung / Generate Payroll
+    </button>
+    <button id="btn-submit-fin" onclick="submitToFinance()" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold">
+      📤 Kirim ke Keuangan (Kel. 2)
+    </button>
+    <button id="btn-poll-fin" onclick="pollFinanceStatus()" class="hidden px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold">
+      🔄 Cek Status Bayar Keuangan
+    </button>
+  </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="no-print grid grid-cols-1 sm:grid-cols-4 gap-4" id="payroll-summary-cards">
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <div class="text-xs text-slate-500">Batch & Status</div>
+    <div class="mt-1 font-bold text-slate-900" id="sum-batch">-</div>
+    <div class="mt-1" id="sum-status"></div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <div class="text-xs text-slate-500">Total Gaji Kotor (Gross)</div>
+    <div class="text-xl font-bold text-slate-900 mt-1" id="sum-gross">Rp 0</div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <div class="text-xs text-slate-500">Total Potongan (PPh21, BPJS, Alpha)</div>
+    <div class="text-xl font-bold text-rose-700 mt-1" id="sum-ded">Rp 0</div>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <div class="text-xs text-slate-500">Total Dibayarkan (Net Payroll)</div>
+    <div class="text-xl font-bold text-emerald-700 mt-1" id="sum-net">Rp 0</div>
+    <div class="text-[11px] text-slate-500 mt-1" id="sum-fin-ref"></div>
+  </div>
+</div>
+
+<!-- Tabel Rincian Gaji -->
+<div class="no-print bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="font-bold text-slate-900">Rincian Payroll Per Karyawan</h3>
+    <span class="text-xs text-slate-500">Komisi ditarik dari CRM · Lembur digabung dengan data SCM</span>
+  </div>
+  <div class="table-wrap">
+    <table class="w-full text-xs text-left">
+      <thead class="uppercase text-slate-500 border-b border-slate-200 bg-slate-50">
+        <tr>
+          <th class="p-3">Karyawan</th>
+          <th class="p-3 text-right">Pokok + Tunj.</th>
+          <th class="p-3 text-right">Lembur (SCM+Int)</th>
+          <th class="p-3 text-right">Komisi CRM</th>
+          <th class="p-3 text-right">Potongan</th>
+          <th class="p-3 text-right">Gaji Bersih</th>
+          <th class="p-3">Catatan Integrasi</th>
+          <th class="p-3 text-right">Slip</th>
+        </tr>
+      </thead>
+      <tbody id="payroll-items-body" class="divide-y divide-slate-100"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Slip Gaji Printable -->
+<div id="payslip-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl">
+    <div class="no-print flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
+      <h3 class="font-bold text-lg">Slip Gaji Digital</h3>
+      <div class="flex gap-2">
+        <button onclick="window.print()" class="px-3 py-1 bg-slate-900 text-white rounded text-xs font-semibold">🖨️ Cetak</button>
+        <button onclick="closeModal('payslip-modal')" class="text-slate-400 hover:text-slate-700 text-xl">&times;</button>
+      </div>
+    </div>
+    <div id="payslip-content" class="text-sm space-y-3"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadPayroll() {
+  const period = document.getElementById("pay-period").value;
+  const data = await apiFetch(`/api/v1/payroll/${period}`);
+  const btnSub = document.getElementById("btn-submit-fin");
+  const btnPoll = document.getElementById("btn-poll-fin");
+
+  if (!data.exists) {
+    document.getElementById("sum-batch").textContent = "Belum dibuat";
+    document.getElementById("sum-status").innerHTML = statusBadge("DRAFT");
+    document.getElementById("sum-gross").textContent = "Rp 0";
+    document.getElementById("sum-ded").textContent = "Rp 0";
+    document.getElementById("sum-net").textContent = "Rp 0";
+    document.getElementById("sum-fin-ref").textContent = "";
+    document.getElementById("payroll-items-body").innerHTML = `
+      <tr><td colspan="8" class="p-6 text-center text-slate-400">
+        Klik <b>"Hitung / Generate Payroll"</b> untuk menarik komisi CRM & lembur SCM lalu menghitung gaji periode ${esc(period)}.
+      </td></tr>`;
+    btnSub.classList.add("hidden");
+    btnPoll.classList.add("hidden");
+    return;
+  }
+
+  document.getElementById("sum-batch").textContent = `${data.batch_code} (${data.total_employees} org)`;
+  document.getElementById("sum-status").innerHTML = statusBadge(data.status);
+  document.getElementById("sum-gross").textContent = formatRupiah(data.total_gross);
+  document.getElementById("sum-ded").textContent = formatRupiah(data.total_deductions);
+  document.getElementById("sum-net").textContent = formatRupiah(data.total_net);
+  document.getElementById("sum-fin-ref").textContent = data.finance_batch_ref ? `Ref Keuangan: ${data.finance_batch_ref}` : "";
+
+  btnSub.classList.toggle("hidden", data.status !== "FINAL");
+  btnPoll.classList.toggle("hidden", data.status !== "SENT_TO_FINANCE");
+
+  document.getElementById("payroll-items-body").innerHTML = data.items.map(it => {
+    const totDed = it.tax_pph21 + it.bpjs_deduction + it.absent_deduction;
+    return `
+      <tr class="hover:bg-slate-50">
+        <td class="p-3">
+          <div class="font-semibold text-slate-900">${esc(it.employee_code)} · ${esc(it.full_name)}</div>
+          <div class="text-[11px] text-slate-500">${esc(it.department_name)} · ${esc(it.position_title)}</div>
+        </td>
+        <td class="p-3 text-right">${formatRupiah(it.base_salary + it.fixed_allowance)}</td>
+        <td class="p-3 text-right">
+          <div>${formatRupiah(it.overtime_pay)}</div>
+          <div class="text-[11px] text-slate-400">${it.overtime_hours} jam</div>
+        </td>
+        <td class="p-3 text-right">
+          <div class="${it.crm_commission > 0 ? 'font-semibold text-purple-700' : 'text-slate-400'}">${formatRupiah(it.crm_commission)}</div>
+          ${it.crm_deals_count > 0 ? `<div class="text-[11px] text-slate-400">${it.crm_deals_count} deal</div>` : ''}
+        </td>
+        <td class="p-3 text-right text-rose-700">-${formatRupiah(totDed)}</td>
+        <td class="p-3 text-right font-bold text-emerald-700">${formatRupiah(it.net_salary)}</td>
+        <td class="p-3 text-slate-600">${esc(it.note || "-")}</td>
+        <td class="p-3 text-right">
+          <button onclick="openPayslip(${it.id})" class="px-2.5 py-1 border border-slate-300 rounded hover:bg-slate-100">Slip</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function generatePayrollBatch() {
+  const period = document.getElementById("pay-period").value;
+  const syncExt = document.getElementById("pay-sync-ext").checked;
+  try {
+    showToast("Menghitung payroll & sinkronisasi data lintas sistem...", "info");
+    const res = await apiFetch("/api/v1/payroll/generate", {
+      method: "POST",
+      body: JSON.stringify({ period, sync_external: syncExt }),
+    });
+    const crmOk = res.sync_summary?.crm?.success;
+    const scmOk = res.sync_summary?.scm?.success;
+    if (syncExt && (!crmOk || !scmOk)) {
+      showToast("Payroll dihitung! Catatan: sebagian server mitra offline (komisi/lembur eksternal 0).", "info");
+    } else {
+      showToast("Payroll selesai dihitung & tersinkron penuh dengan CRM/SCM!");
+    }
+    await loadPayroll();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function submitToFinance() {
+  const period = document.getElementById("pay-period").value;
+  try {
+    showToast("Mengirim tagihan payroll ke Sistem Keuangan (Kel. 2)...", "info");
+    const res = await apiFetch(`/api/v1/payroll/${period}/submit-finance`, { method: "POST" });
+    showToast(`Terkirim ke Keuangan! Ref: ${res.finance_batch_ref}`);
+    await loadPayroll();
+  } catch (err) {
+    showToast("Gagal mengirim ke Keuangan: " + err.message, "error");
+  }
+}
+
+async function pollFinanceStatus() {
+  const period = document.getElementById("pay-period").value;
+  try {
+    const res = await apiFetch(`/api/v1/payroll/${period}/sync-finance-status`, { method: "POST" });
+    showToast(`Status dari Keuangan: ${res.local_status}`);
+    await loadPayroll();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function openPayslip(itemId) {
+  const p = await apiFetch(`/api/v1/payroll/payslip/${itemId}`);
+  document.getElementById("payslip-content").innerHTML = `
+    <div class="border-b border-slate-200 pb-3">
+      <div class="font-bold text-base text-slate-900">{{ company.company_name }}</div>
+      <div class="text-xs text-slate-500">SLIP GAJI KARYAWAN · Periode ${esc(p.period)} (${esc(p.batch_code)})</div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-lg">
+      <div><span class="text-slate-500">Nama:</span> <b>${esc(p.full_name)}</b></div>
+      <div><span class="text-slate-500">Kode:</span> <b class="font-mono">${esc(p.employee_code)}</b></div>
+      <div><span class="text-slate-500">Jabatan:</span> ${esc(p.position_title)}</div>
+      <div><span class="text-slate-500">Departemen:</span> ${esc(p.department_name)}</div>
+      <div><span class="text-slate-500">Transfer:</span> ${esc(p.bank_name)} ${esc(p.bank_account)}</div>
+      <div><span class="text-slate-500">Status Batch:</span> ${statusBadge(p.batch_status)}</div>
+    </div>
+    <div class="space-y-1.5 text-xs">
+      <div class="font-bold text-slate-700 uppercase">Penerimaan</div>
+      <div class="flex justify-between"><span>Gaji Pokok</span><span>${formatRupiah(p.base_salary)}</span></div>
+      <div class="flex justify-between"><span>Tunjangan Tetap</span><span>${formatRupiah(p.fixed_allowance)}</span></div>
+      <div class="flex justify-between"><span>Upah Lembur (${p.overtime_hours} jam)</span><span>${formatRupiah(p.overtime_pay)}</span></div>
+      <div class="flex justify-between"><span>Komisi Sales (dari CRM)</span><span>${formatRupiah(p.crm_commission)}</span></div>
+      <div class="flex justify-between font-bold border-t border-slate-200 pt-1"><span>Total Pendapatan Kotor</span><span>${formatRupiah(p.gross_salary)}</span></div>
+    </div>
+    <div class="space-y-1.5 text-xs">
+      <div class="font-bold text-slate-700 uppercase">Potongan</div>
+      <div class="flex justify-between text-rose-700"><span>PPh 21</span><span>-${formatRupiah(p.tax_pph21)}</span></div>
+      <div class="flex justify-between text-rose-700"><span>BPJS Kesehatan & Ketenagakerjaan (3%)</span><span>-${formatRupiah(p.bpjs_deduction)}</span></div>
+      <div class="flex justify-between text-rose-700"><span>Potongan Alpha</span><span>-${formatRupiah(p.absent_deduction)}</span></div>
+    </div>
+    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex justify-between items-center">
+      <span class="font-bold text-emerald-900">TAKE HOME PAY (GAJI BERSIH)</span>
+      <span class="text-lg font-bold text-emerald-700">${formatRupiah(p.net_salary)}</span>
+    </div>
+  `;
+  openModal("payslip-modal");
+}
+
+loadPayroll();
+</script>
+{% endblock %}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ page_title }} — HRM Kelompok 12 (IAK)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/css/app.css" />
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex">
+  <!-- Sidebar -->
+  <aside class="no-print w-64 bg-slate-900 text-slate-200 flex flex-col shrink-0 min-h-screen">
+    <div class="p-5 border-b border-slate-800">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white text-sm">
+          HR
+        </div>
+        <div>
+          <div class="font-bold text-white leading-tight">HRM Enterprise</div>
+          <div class="text-xs text-blue-300">Kelompok 12 · IAK UAS</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="flex-1 py-4 px-3 space-y-1 text-sm">
+      <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition hover:bg-slate-800 {% if active_page == 'dashboard' %}nav-link-active{% endif %}">
+        <span>📊</span><span>Dashboard Eksekutif</span>
+      </a>
+      <a href="/employees" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition hover:bg-slate-800 {% if active_page == 'employees' %}nav-link-active{% endif %}">
+        <span>👥</span><span>Karyawan & Sertifikasi</span>
+      </a>
+      <a href="/attendance" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition hover:bg-slate-800 {% if active_page == 'attendance' %}nav-link-active{% endif %}">
+        <span>🕒</span><span>Absensi, Lembur & Cuti</span>
+      </a>
+      <a href="/recruitment" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition hover:bg-slate-800 {% if active_page == 'recruitment' %}nav-link-active{% endif %}">
+        <span>🧩</span><span>Rekrutmen & Manpower</span>
+      </a>
+      <a href="/payroll" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition hover:bg-slate-800 {% if active_page == 'payroll' %}nav-link-active{% endif %}">
+        <span>💳</span><span>Penggajian (Payroll)</span>
+      </a>
+      <div class="pt-3 mt-3 border-t border-slate-800">
+        <div class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Integrasi Sistem</div>
+        <a href="/integration" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition hover:bg-slate-800 {% if active_page == 'integration' %}nav-link-active{% endif %}">
+          <span>🔌</span><span>Integration Hub & Logs</span>
+        </a>
+        <a href="/docs" target="_blank" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition hover:bg-slate-800 text-slate-300">
+          <span>📘</span><span>OpenAPI / Swagger UI</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="p-4 border-t border-slate-800 text-xs text-slate-400">
+      <div class="font-semibold text-slate-300 mb-1">Ekosistem 4 Kelompok:</div>
+      <div>• Kel. 2: Keuangan</div>
+      <div>• Kel. 7: CRM (Sales)</div>
+      <div>• Kel. 8: SCM (Supply Chain)</div>
+      <div class="text-blue-300 font-medium">• Kel. 12: HRM (Anda)</div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Top Header -->
+    <header class="no-print bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 class="text-lg font-bold text-slate-900">{{ page_title }}</h1>
+        <p class="text-xs text-slate-500">
+          <span class="font-semibold text-slate-700">{{ company.company_name }}</span> · {{ company.industry_label }}
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <label class="text-xs font-medium text-slate-600 flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+          <span>Tema Studi Kasus:</span>
+          <select id="theme-switcher" onchange="switchCompanyTheme(this.value)" class="bg-transparent font-semibold text-slate-900 focus:outline-none cursor-pointer">
+            <option value="software" {% if company.theme_key == 'software' %}selected{% endif %}>Software</option>
+            <option value="manufaktur" {% if company.theme_key == 'manufaktur' %}selected{% endif %}>Manufaktur</option>
+            <option value="telekomunikasi" {% if company.theme_key == 'telekomunikasi' %}selected{% endif %}>Telekomunikasi</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <main class="flex-1 p-6 space-y-6">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="no-print fixed bottom-5 right-5 z-50 space-y-2"></div>
+
+  <script src="/static/js/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

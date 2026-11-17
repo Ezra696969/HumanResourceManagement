@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+  <!-- Manpower Requests -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div>
+        <h3 class="font-bold text-slate-900">Permintaan Tenaga Kerja (Manpower Request)</h3>
+        <p class="text-xs text-slate-500">Bisa berasal dari Internal maupun dikirim otomatis via API oleh SCM (Kel. 8) / CRM (Kel. 7). Anggaran dicek ke Keuangan (Kel. 2).</p>
+      </div>
+      <button onclick="openModal('mr-modal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold">
+        + Buat Manpower Request
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs uppercase text-slate-500 border-b border-slate-200 bg-slate-50">
+          <tr>
+            <th class="p-3">Kode</th>
+            <th class="p-3">Pengaju</th>
+            <th class="p-3">Posisi & Departemen</th>
+            <th class="p-3 text-right">Kebutuhan & Est. Gaji</th>
+            <th class="p-3">Anggaran Keuangan</th>
+            <th class="p-3">Status Hiring</th>
+            <th class="p-3 text-right">Aksi Integrasi</th>
+          </tr>
+        </thead>
+        <tbody id="mr-body" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Applicants Pipeline -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div>
+        <h3 class="font-bold text-slate-900">Pipeline Kandidat Pelamar & Auto-Onboarding</h3>
+        <p class="text-xs text-slate-500">Memilih tahap <b>HIRED</b> akan otomatis membuat data karyawan aktif baru (EMP-xxx).</p>
+      </div>
+      <button onclick="openModal('app-modal')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold">
+        + Tambah Pelamar
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs uppercase text-slate-500 border-b border-slate-200 bg-slate-50">
+          <tr>
+            <th class="p-3">Kandidat</th>
+            <th class="p-3">Lowongan</th>
+            <th class="p-3">Keahlian</th>
+            <th class="p-3">Tahap</th>
+            <th class="p-3 text-right">Ubah Tahap / Onboarding</th>
+          </tr>
+        </thead>
+        <tbody id="app-body" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Manpower Request -->
+<div id="mr-modal" class="hidden fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+      <h3 class="font-bold text-lg">Permintaan SDM Baru</h3>
+      <button onclick="closeModal('mr-modal')" class="text-slate-400 hover:text-slate-700 text-xl">&times;</button>
+    </div>
+    <form onsubmit="submitMR(event)" class="space-y-3 text-sm">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Departemen</label>
+        <select id="mr-dept" required class="w-full border border-slate-300 rounded-lg px-3 py-2"></select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Posisi yang Dibutuhkan *</label>
+        <input id="mr-pos" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Orang</label>
+          <input id="mr-hc" type="number" min="1" value="1" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Estimasi Gaji (Rp)</label>
+          <input id="mr-sal" type="number" min="0" value="7500000" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Alasan Kebutuhan *</label>
+        <textarea id="mr-reason" required rows="2" class="w-full border border-slate-300 rounded-lg px-3 py-2"></textarea>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('mr-modal')" class="px-4 py-2 border border-slate-300 rounded-lg">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Pelamar -->
+<div id="app-modal" class="hidden fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+      <h3 class="font-bold text-lg">Tambah Kandidat Pelamar</h3>
+      <button onclick="closeModal('app-modal')" class="text-slate-400 hover:text-slate-700 text-xl">&times;</button>
+    </div>
+    <form onsubmit="submitApplicant(event)" class="space-y-3 text-sm">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Lowongan Manpower</label>
+        <select id="app-mr" required class="w-full border border-slate-300 rounded-lg px-3 py-2"></select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap *</label>
+        <input id="app-name" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Email *</label>
+          <input id="app-email" type="email" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">No. HP</label>
+          <input id="app-phone" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Skills / Pengalaman</label>
+        <input id="app-skills" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('app-modal')" class="px-4 py-2 border border-slate-300 rounded-lg">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-slate-900 text-white rounded-lg font-semibold">Simpan Pelamar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function initRecruitment() {
+  const depts = await apiFetch("/api/v1/departments");
+  document.getElementById("mr-dept").innerHTML = depts.map(d => `<option value="${d.id}">${esc(d.code)} — ${esc(d.name)}</option>`).join("");
+  await refreshRecruitment();
+}
+
+async function refreshRecruitment() {
+  const [mrs, apps] = await Promise.all([
+    apiFetch("/api/v1/manpower-requests"),
+    apiFetch("/api/v1/applicants"),
+  ]);
+
+  document.getElementById("app-mr").innerHTML = mrs.map(m => `<option value="${m.id}">${esc(m.request_code)} — ${esc(m.position_title)}</option>`).join("");
+
+  document.getElementById("mr-body").innerHTML = mrs.map(m => `
+    <tr>
+      <td class="p-3 font-mono font-semibold text-slate-700">${esc(m.request_code)}</td>
+      <td class="p-3">${statusBadge(m.requester_system)}</td>
+      <td class="p-3">
+        <div class="font-semibold text-slate-900">${esc(m.position_title)}</div>
+        <div class="text-xs text-slate-500">${esc(m.department_name)} · ${esc(m.reason)}</div>
+      </td>
+      <td class="p-3 text-right">
+        <div class="font-semibold">${m.headcount} org</div>
+        <div class="text-xs text-slate-500">${formatRupiah(m.estimated_salary)}/bln</div>
+      </td>
+      <td class="p-3">
+        ${statusBadge(m.finance_budget_status)}
+        ${m.finance_ref ? `<div class="text-[11px] font-mono text-slate-500 mt-1">${esc(m.finance_ref)}</div>` : ''}
+      </td>
+      <td class="p-3">${statusBadge(m.hiring_status)} <span class="text-xs text-slate-500">(${m.hired_count}/${m.headcount})</span></td>
+      <td class="p-3 text-right">
+        <button onclick="checkBudget(${m.id})" class="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          💳 Cek Budget ke Keuangan
+        </button>
+      </td>
+    </tr>
+  `).join("");
+
+  document.getElementById("app-body").innerHTML = apps.map(a => `
+    <tr>
+      <td class="p-3">
+        <div class="font-semibold text-slate-900">${esc(a.full_name)}</div>
+        <div class="text-xs text-slate-500">${esc(a.email)} · ${esc(a.phone)}</div>
+      </td>
+      <td class="p-3">
+        <div class="font-medium">${esc(a.position_title)}</div>
+        <div class="text-xs text-slate-500">${esc(a.request_code)} (${esc(a.requester_system)})</div>
+      </td>
+      <td class="p-3 text-xs text-slate-600">${esc(a.skills)}</td>
+      <td class="p-3">
+        ${statusBadge(a.stage)}
+        ${a.hired_employee_code ? `<div class="text-[11px] font-mono text-emerald-700 mt-1">→ ${esc(a.hired_employee_code)}</div>` : ''}
+      </td>
+      <td class="p-3 text-right">
+        ${a.stage !== 'HIRED' ? `
+          <select onchange="changeStage(${a.id}, this.value)" class="border border-slate-300 rounded-lg px-2 py-1 text-xs">
+            <option value="">Pilih Tahap...</option>
+            <option value="SCREENING">SCREENING</option>
+            <option value="INTERVIEW">INTERVIEW</option>
+            <option value="OFFERED">OFFERED</option>
+            <option value="HIRED">HIRED (Auto-Onboarding)</option>
+            <option value="REJECTED">REJECTED</option>
+          </select>
+        ` : '<span class="text-xs text-emerald-700 font-semibold">Sudah Aktif di Karyawan</span>'}
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function submitMR(ev) {
+  ev.preventDefault();
+  try {
+    await apiFetch("/api/v1/manpower-requests", {
+      method: "POST",
+      body: JSON.stringify({
+        requester_system: "INTERNAL",
+        department_id: Number(document.getElementById("mr-dept").value),
+        position_title: document.getElementById("mr-pos").value.trim(),
+        headcount: Number(document.getElementById("mr-hc").value),
+        estimated_salary: Number(document.getElementById("mr-sal").value),
+        reason: document.getElementById("mr-reason").value.trim(),
+      }),
+    });
+    closeModal("mr-modal");
+    showToast("Manpower Request dibuat");
+    await refreshRecruitment();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function checkBudget(reqId) {
+  try {
+    showToast("Mengirim permohonan anggaran ke Keuangan (Kel. 2)...", "info");
+    const res = await apiFetch(`/api/v1/manpower-requests/${reqId}/check-budget`, { method: "POST" });
+    showToast(`Respon Keuangan: ${res.finance_budget_status} (${res.finance_ref})`);
+    await refreshRecruitment();
+  } catch (err) {
+    showToast("Gagal cek anggaran ke Keuangan: " + err.message, "error");
+  }
+}
+
+async function submitApplicant(ev) {
+  ev.preventDefault();
+  try {
+    await apiFetch("/api/v1/applicants", {
+      method: "POST",
+      body: JSON.stringify({
+        manpower_request_id: Number(document.getElementById("app-mr").value),
+        full_name: document.getElementById("app-name").value.trim(),
+        email: document.getElementById("app-email").value.trim(),
+        phone: document.getElementById("app-phone").value.trim(),
+        skills: document.getElementById("app-skills").value.trim(),
+      }),
+    });
+    closeModal("app-modal");
+    showToast("Pelamar berhasil ditambahkan");
+    await refreshRecruitment();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function changeStage(appId, stage) {
+  if (!stage) return;
+  if (stage === "HIRED" && !confirm("Terima kandidat ini dan otomatis daftarkan ke Master Karyawan?")) {
+    await refreshRecruitment();
+    return;
+  }
+  try {
+    const res = await apiFetch(`/api/v1/applicants/${appId}/stage`, {
+      method: "PATCH",
+      body: JSON.stringify({ stage }),
+    });
+    if (stage === "HIRED") {
+      showToast(`Onboarding sukses! ID Karyawan baru: ${res.hired_employee_code}`);
+    } else {
+      showToast(`Tahap kandidat diperbarui ke ${stage}`);
+    }
+    await refreshRecruitment();
+  } catch (err) {
+    showToast(err.message, "error");
+    await refreshRecruitment();
+  }
+}
+
+initRecruitment();
+</script>
+{% endblock %}
